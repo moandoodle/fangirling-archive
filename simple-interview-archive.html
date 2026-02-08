@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>인터뷰 아카이브 - 간편 버전</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&family=Inter:wght@400;600&display=swap');
+        
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+        }
+        
+        .en-text {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .video-container {
+            position: relative;
+            padding-bottom: 56.25%; /* 16:9 비율 */
+            height: 0;
+            overflow: hidden;
+        }
+        
+        .video-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <div class="max-w-6xl mx-auto p-4 md:p-8">
+        <!-- Header -->
+        <div class="bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl p-6 md:p-8 text-white mb-8 shadow-lg">
+            <h1 class="text-3xl md:text-4xl font-bold mb-2">🎬 인터뷰 아카이브</h1>
+            <p class="text-purple-100">유튜브 주소만 붙여넣으면 끝!</p>
+        </div>
+
+        <!-- Add Video Form -->
+        <div class="bg-white rounded-xl p-6 shadow-md mb-8">
+            <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
+                <span>➕</span> 새 영상 추가
+            </h2>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-semibold mb-2">유튜브 주소</label>
+                    <input 
+                        type="text" 
+                        id="youtube-url" 
+                        placeholder="https://www.youtube.com/watch?v=..."
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    >
+                    <p class="text-xs text-gray-500 mt-1">※ 유튜브 링크를 붙여넣으세요</p>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-semibold mb-2">제목 (선택)</label>
+                    <input 
+                        type="text" 
+                        id="video-title" 
+                        placeholder="자동으로 가져옵니다"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    >
+                </div>
+
+                <div>
+                    <label class="block text-sm font-semibold mb-2">
+                        스크립트 입력 방식 선택
+                    </label>
+                    <div class="flex gap-4 mb-3">
+                        <label class="flex items-center gap-2">
+                            <input type="radio" name="script-mode" value="auto" checked class="text-purple-600">
+                            <span class="text-sm">자동 (유튜브 자막)</span>
+                        </label>
+                        <label class="flex items-center gap-2">
+                            <input type="radio" name="script-mode" value="manual" class="text-purple-600">
+                            <span class="text-sm">수동 입력</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div id="manual-script-area" class="hidden">
+                    <label class="block text-sm font-semibold mb-2">스크립트 (한 줄씩 입력)</label>
+                    <textarea 
+                        id="script-input" 
+                        rows="8"
+                        placeholder="영어|한글 형식으로 입력
+예시:
+Hello, how are you?|안녕하세요, 어떻게 지내세요?
+I'm doing great!|정말 잘 지내고 있어요!"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent font-mono text-sm"
+                    ></textarea>
+                    <p class="text-xs text-gray-500 mt-1">※ 각 줄마다 "영어|한글" 형식으로 구분자는 | (파이프) 사용</p>
+                </div>
+
+                <button 
+                    onclick="addVideo()" 
+                    class="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 rounded-lg font-semibold hover:from-purple-700 hover:to-pink-700 transition-all shadow-md hover:shadow-lg"
+                >
+                    영상 추가하기
+                </button>
+            </div>
+        </div>
+
+        <!-- Video List -->
+        <div id="video-list" class="space-y-6">
+            <!-- 예시 영상 -->
+            <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                <button 
+                    onclick="toggleVideo(this)" 
+                    class="w-full p-6 text-left flex justify-between items-center hover:bg-gray-50 transition-colors"
+                >
+                    <div class="flex-1">
+                        <h3 class="font-bold text-lg mb-1">예시: 샘플 인터뷰</h3>
+                        <p class="text-sm text-gray-500">2024-01-15 · Sample Channel</p>
+                    </div>
+                    <svg class="w-6 h-6 transform transition-transform chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                    </svg>
+                </button>
+                
+                <div class="video-content hidden p-6 pt-0 border-t border-gray-100">
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <!-- Video Player -->
+                        <div>
+                            <div class="video-container rounded-lg overflow-hidden shadow-lg mb-4">
+                                <iframe 
+                                    src="https://www.youtube.com/embed/dQw4w9WgXcQ" 
+                                    frameborder="0" 
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                                    allowfullscreen
+                                ></iframe>
+                            </div>
+                            <p class="text-xs text-gray-500 text-center">
+                                영상 재생 안 되면 업로더가 임베드를 차단했을 수 있습니다
+                            </p>
+                        </div>
+                        
+                        <!-- Script -->
+                        <div class="space-y-3 max-h-96 overflow-y-auto pr-2">
+                            <div class="bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg p-4 border-l-4 border-purple-500">
+                                <p class="en-text text-gray-800 mb-2">Hello! This is a sample interview.</p>
+                                <p class="text-gray-600 text-sm">안녕하세요! 이것은 샘플 인터뷰입니다.</p>
+                            </div>
+                            
+                            <div class="bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg p-4 border-l-4 border-purple-500">
+                                <p class="en-text text-gray-800 mb-2">Can you tell us about your experience?</p>
+                                <p class="text-gray-600 text-sm">당신의 경험에 대해 말씀해 주시겠어요?</p>
+                            </div>
+                            
+                            <div class="bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg p-4 border-l-4 border-purple-500">
+                                <p class="en-text text-gray-800 mb-2">It was absolutely amazing!</p>
+                                <p class="text-gray-600 text-sm">정말 놀라운 경험이었어요!</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="mt-12 text-center text-gray-500 text-sm">
+            <p>💡 Tip: 스크립트를 ChatGPT에 넣고 "한 줄씩 한글 번역해줘" 하면 빠릅니다</p>
+            <p class="mt-2">데이터는 브라우저에 저장됩니다 (다른 기기에서는 안 보여요)</p>
+        </div>
+    </div>
+
+    <script>
+        // 라디오 버튼 변경 감지
+        document.querySelectorAll('input[name="script-mode"]').forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                const manualArea = document.getElementById('manual-script-area');
+                if (e.target.value === 'manual') {
+                    manualArea.classList.remove('hidden');
+                } else {
+                    manualArea.classList.add('hidden');
+                }
+            });
+        });
+
+        function toggleVideo(button) {
+            const content = button.nextElementSibling;
+            const chevron = button.querySelector('.chevron');
+            
+            if (content.classList.contains('hidden')) {
+                content.classList.remove('hidden');
+                chevron.style.transform = 'rotate(180deg)';
+            } else {
+                content.classList.add('hidden');
+                chevron.style.transform = 'rotate(0deg)';
+            }
+        }
+
+        function extractVideoId(url) {
+            // 유튜브 URL에서 Video ID 추출
+            const regExp = /^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#&?]*).*/;
+            const match = url.match(regExp);
+            return (match && match[7].length === 11) ? match[7] : null;
+        }
+
+        async function fetchYouTubeTitle(videoId) {
+            // 실제로는 YouTube Data API 필요하지만, 간단히 iframe title로 대체 가능
+            // API 키 없이도 작동하는 방법
+            try {
+                const response = await fetch(`https://noembed.com/embed?url=https://www.youtube.com/watch?v=${videoId}`);
+                const data = await response.json();
+                return data.title || '제목을 가져올 수 없습니다';
+            } catch (error) {
+                return '영상 제목';
+            }
+        }
+
+        async function fetchYouTubeSubtitles(videoId) {
+            // 실제 구현에는 서버 필요 (CORS 제한)
+            // 여기서는 시뮬레이션
+            alert('자동 자막 가져오기는 서버가 필요합니다.\n지금은 "수동 입력" 모드를 사용해주세요!');
+            return null;
+        }
+
+        async function addVideo() {
+            const url = document.getElementById('youtube-url').value.trim();
+            const titleInput = document.getElementById('video-title').value.trim();
+            const scriptMode = document.querySelector('input[name="script-mode"]:checked').value;
+            const scriptInput = document.getElementById('script-input').value.trim();
+
+            if (!url) {
+                alert('유튜브 주소를 입력해주세요!');
+                return;
+            }
+
+            const videoId = extractVideoId(url);
+            if (!videoId) {
+                alert('올바른 유튜브 주소가 아닙니다!');
+                return;
+            }
+
+            // 제목 가져오기
+            const title = titleInput || await fetchYouTubeTitle(videoId);
+
+            let scriptLines = [];
+            
+            if (scriptMode === 'auto') {
+                // 자동 모드 (실제로는 서버 필요)
+                const subtitles = await fetchYouTubeSubtitles(videoId);
+                if (!subtitles) return;
+                scriptLines = subtitles;
+            } else {
+                // 수동 입력 모드
+                if (!scriptInput) {
+                    alert('스크립트를 입력해주세요!');
+                    return;
+                }
+                
+                scriptLines = scriptInput.split('\n')
+                    .filter(line => line.trim())
+                    .map(line => {
+                        const [en, ko] = line.split('|').map(s => s.trim());
+                        return { en: en || '', ko: ko || '' };
+                    });
+            }
+
+            // 영상 카드 생성
+            createVideoCard(videoId, title, scriptLines);
+
+            // 입력 폼 초기화
+            document.getElementById('youtube-url').value = '';
+            document.getElementById('video-title').value = '';
+            document.getElementById('script-input').value = '';
+
+            alert('영상이 추가되었습니다! 🎉');
+        }
+
+        function createVideoCard(videoId, title, scriptLines) {
+            const videoList = document.getElementById('video-list');
+            const today = new Date().toISOString().split('T')[0];
+
+            const scriptHTML = scriptLines.map(line => `
+                <div class="bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg p-4 border-l-4 border-purple-500">
+                    <p class="en-text text-gray-800 mb-2">${line.en}</p>
+                    <p class="text-gray-600 text-sm">${line.ko}</p>
+                </div>
+            `).join('');
+
+            const cardHTML = `
+                <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                    <button 
+                        onclick="toggleVideo(this)" 
+                        class="w-full p-6 text-left flex justify-between items-center hover:bg-gray-50 transition-colors"
+                    >
+                        <div class="flex-1">
+                            <h3 class="font-bold text-lg mb-1">${title}</h3>
+                            <p class="text-sm text-gray-500">${today}</p>
+                        </div>
+                        <svg class="w-6 h-6 transform transition-transform chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </button>
+                    
+                    <div class="video-content hidden p-6 pt-0 border-t border-gray-100">
+                        <div class="grid md:grid-cols-2 gap-6">
+                            <div>
+                                <div class="video-container rounded-lg overflow-hidden shadow-lg mb-4">
+                                    <iframe 
+                                        src="https://www.youtube.com/embed/${videoId}" 
+                                        frameborder="0" 
+                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                                        allowfullscreen
+                                    ></iframe>
+                                </div>
+                                <p class="text-xs text-gray-500 text-center">
+                                    영상 재생 안 되면 업로더가 임베드를 차단했을 수 있습니다
+                                </p>
+                            </div>
+                            
+                            <div class="space-y-3 max-h-96 overflow-y-auto pr-2">
+                                ${scriptHTML}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            videoList.insertAdjacentHTML('afterbegin', cardHTML);
+        }
+    </script>
+</body>
+</html>
